@@ -3,7 +3,7 @@ import { getDimensions } from "../utils";
 import { Placement, PopperOptions } from "../types";
 import { determinePositionAbsolute } from "./helpers";
 
-class CreatePopperAbsolute {
+class UseCreatePopperAbsolute {
     private reference: HTMLElement
     private popper: HTMLElement
     private offsetDistance: number
@@ -11,6 +11,8 @@ class CreatePopperAbsolute {
     private disableOnResize: boolean
     private disableOnScroll: boolean
     private onUpdate: (({ x, y, placement }: { x: number, y: number, placement: Placement }) => void) | undefined
+    private isWindowEventsRegistered: boolean
+
     /**
      * Flexilla Popper 
      * @param reference 
@@ -29,6 +31,7 @@ class CreatePopperAbsolute {
         if (options.offsetDistance && typeof options.offsetDistance !== "number") throw new Error("OffsetDistance must be a number");
 
         const { disableOnResize, disableOnScroll } = eventEffect
+        this.isWindowEventsRegistered = false
         this.reference = reference
         this.popper = popper
         this.offsetDistance = offsetDistance
@@ -61,7 +64,7 @@ class CreatePopperAbsolute {
         this.popper.style.setProperty("--fx-popper-placement-y", "")
     };
 
-    private initPlacement = (placement?: Placement, offsetDistance?: number): void => {
+    private initPlacement = (): void => {
         this.validateElements();
         this.setInitialStyles();
         const windowWidth = window.innerWidth;
@@ -69,7 +72,7 @@ class CreatePopperAbsolute {
         const { popperHeight, popperWidth, refHeight, refWidth, refLeft, refTop } = getDimensions({ reference: this.reference, popper: this.popper });
         const { x, y } = determinePositionAbsolute(
             {
-                placement: placement || this.placement,
+                placement: this.placement,
                 refWidth,
                 refTop,
                 refLeft,
@@ -78,43 +81,53 @@ class CreatePopperAbsolute {
                 popperHeight,
                 windowHeight,
                 windowWidth,
-                offsetDistance: offsetDistance || this.offsetDistance
+                offsetDistance: this.offsetDistance
             }
         );
 
         this.setPopperStyleProperty(x, y)
-        this.onUpdate?.({ x, y, placement: placement || this.placement })
+        this.onUpdate?.({ x, y, placement: this.placement })
     };
+
+    private removeWindowEvents = () => {
+        if (this.isWindowEventsRegistered) {
+            !this.disableOnResize && window.removeEventListener("resize", this.updatePosition);
+            !this.disableOnScroll && window.removeEventListener("scroll", this.updatePosition);
+            this.isWindowEventsRegistered = false
+        }
+    }
 
     /**
      * Add event Listeners : window resize and scroll
      * These events depend on if it's disable or not
      */
     private attachWindowEvent = () => {
+        if (this.isWindowEventsRegistered)
+            this.removeWindowEvents()
         if (!this.disableOnResize) {
-            window.addEventListener("resize", this.initPositionate);
+            window.addEventListener("resize", this.updatePosition);
         }
         if (!this.disableOnScroll)
-            window.addEventListener("scroll", this.initPositionate)
+            window.addEventListener("scroll", this.updatePosition)
+        this.isWindowEventsRegistered = true
     }
 
-    private initPositionate = (): void => {
-        this.initPlacement();
-    };
 
     resetPosition = () => {
         this.setInitialStyles()
     }
 
-    updatePosition() {
+    updatePosition = () => {
         !this.popper.hasAttribute("data-fx-popper") && this.popper.setAttribute("data-fx-popper", '')
-        this.initPositionate()
+        this.initPlacement()
         this.attachWindowEvent()
     }
 
     setOptions({ placement, offsetDistance }: { placement: Placement, offsetDistance?: number }) {
         this.cleanupEvents()
-        this.initPlacement(placement, offsetDistance)
+        this.placement = placement
+        this.offsetDistance = offsetDistance || this.offsetDistance
+        this.initPlacement()
         this.attachWindowEvent()
     }
 
@@ -123,8 +136,7 @@ class CreatePopperAbsolute {
      */
     cleanupEvents = (): void => {
         this.setInitialStyles()
-        !this.disableOnResize && window.removeEventListener("resize", this.initPositionate);
-        !this.disableOnScroll && window.removeEventListener("scroll", this.initPositionate);
+        this.removeWindowEvents()
     };
 
 }
@@ -136,5 +148,5 @@ class CreatePopperAbsolute {
  * @param options 
  * @returns 
  */
-export const fCreatePopperAbsolute = (reference: HTMLElement, popper: HTMLElement, options: PopperOptions = {}) => new CreatePopperAbsolute(reference, popper, options)
-export default CreatePopperAbsolute
+export const fCreatePopperAbsolute = (reference: HTMLElement, popper: HTMLElement, options: PopperOptions = {}) => new UseCreatePopperAbsolute(reference, popper, options)
+export default UseCreatePopperAbsolute

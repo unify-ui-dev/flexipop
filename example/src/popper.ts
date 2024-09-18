@@ -1,5 +1,5 @@
 import { CreatePopper, type Placement } from "flexipop"
-import { CreatePopperAbsolute } from "flexipop/with-absolute"
+import { UseCreatePopperAbsolute as CreatePopperWithAbsolute } from "flexipop/with-absolute"
 
 const triggers = Array.from(document.querySelectorAll("[data-trigger-popper]")) as HTMLButtonElement[]
 const popperEl = document.querySelector("[data-popper-el]")
@@ -8,7 +8,7 @@ const reference = document.querySelector("[data-reference-el]")
 if (popperEl instanceof HTMLElement && reference instanceof HTMLElement) {
     let currentPosition: Placement = "bottom"
     const popper = new CreatePopper(reference, popperEl, {
-        placement: "top-end"
+        placement: currentPosition
     })
     popper.updatePosition()
     for (const trigger of triggers) {
@@ -35,8 +35,11 @@ const referenceAB = document.querySelector("[data-reference-el-with-absolute]")
 
 if (popperElAB instanceof HTMLElement && referenceAB instanceof HTMLElement) {
     let currentPosition: Placement = "bottom"
-    const popper = new CreatePopperAbsolute(referenceAB, popperElAB, {
-        placement: "top-end"
+    const popper = new CreatePopperWithAbsolute(referenceAB, popperElAB, {
+        placement: currentPosition,
+        onUpdate({ placement }) {
+            console.log(placement)
+        }
     })
     popper.updatePosition()
     for (const trigger of triggersAB) {

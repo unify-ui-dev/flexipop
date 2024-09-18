@@ -11,7 +11,7 @@ class CreatePopper {
     private disableOnResize: boolean
     private disableOnScroll: boolean
     private onUpdate: (({ x, y, placement }: { x: number, y: number, placement: Placement }) => void) | undefined
-    private isEventRegistrer: boolean
+    private isWindowEventsRegistered: boolean
 
     /**
      * Flexilla Popper 
@@ -31,7 +31,7 @@ class CreatePopper {
         if (options.offsetDistance && typeof options.offsetDistance !== "number") throw new Error("OffsetDistance must be a number");
 
         const { disableOnResize, disableOnScroll } = eventEffect
-        this.isEventRegistrer = false
+        this.isWindowEventsRegistered = false
         this.reference = reference
         this.popper = popper
         this.offsetDistance = offsetDistance
@@ -63,7 +63,7 @@ class CreatePopper {
         this.popper.style.setProperty("--fx-popper-placement-y", "")
     };
 
-    private initPlacement = (placement?: Placement, offsetDistance?: number): void => {
+    private initPlacement = (): void => {
         this.validateElements();
         this.setInitialStyles();
         const windowWidth = window.innerWidth;
@@ -71,7 +71,7 @@ class CreatePopper {
         const { popperHeight, popperWidth, refHeight, refWidth, refLeft, refTop } = getDimensions({ reference: this.reference, popper: this.popper });
         const { x, y } = determinePosition(
             {
-                placement: placement || this.placement,
+                placement: this.placement,
                 refWidth,
                 refTop,
                 refLeft,
@@ -80,49 +80,52 @@ class CreatePopper {
                 popperHeight,
                 windowHeight,
                 windowWidth,
-                offsetDistance: offsetDistance || this.offsetDistance
+                offsetDistance: this.offsetDistance
             }
         );
 
         this.setPopperStyleProperty(x, y)
-        this.onUpdate?.({ x, y, placement: placement || this.placement })
+        this.onUpdate?.({ x, y, placement: this.placement })
     };
 
+    private removeWindowEvents = () => {
+        if (this.isWindowEventsRegistered) {
+            !this.disableOnResize && window.removeEventListener("resize", this.updatePosition);
+            !this.disableOnScroll && window.removeEventListener("scroll", this.updatePosition);
+            this.isWindowEventsRegistered = false
+        }
+    }
     /**
      * Add event Listeners : window resize and scroll
      * These events depend on if it's disable or not
      */
     private attachWindowEvent = () => {
+        if (this.isWindowEventsRegistered)
+            this.removeWindowEvents()
+
         if (!this.disableOnResize) {
-            window.addEventListener("resize", this.initPositionate);
+            window.addEventListener("resize", this.updatePosition);
         }
         if (!this.disableOnScroll)
-            window.addEventListener("scroll", this.initPositionate)
-        this.isEventRegistrer = true
+            window.addEventListener("scroll", this.updatePosition)
+        this.isWindowEventsRegistered = true
     }
 
-    private initPositionate = (): void => {
-        this.initPlacement();
-    };
 
     resetPosition = () => {
         this.setInitialStyles()
     }
 
-    updatePosition() {
-        this.initPositionate()
+    updatePosition = () => {
+        this.initPlacement();
         this.attachWindowEvent()
     }
 
     setOptions({ placement, offsetDistance }: { placement: Placement, offsetDistance?: number }) {
-        this.initPlacement(placement, offsetDistance)
-        if (this.isEventRegistrer) this.cleanEvents()
+        this.placement = placement
+        this.offsetDistance = offsetDistance || this.offsetDistance
+        this.initPlacement()
         this.attachWindowEvent()
-    }
-
-    private cleanEvents = () => {
-        !this.disableOnResize && window.removeEventListener("resize", this.initPositionate);
-        !this.disableOnScroll && window.removeEventListener("scroll", this.initPositionate);
     }
 
     /**
@@ -130,10 +133,7 @@ class CreatePopper {
      */
     cleanupEvents = (): void => {
         this.setInitialStyles()
-        if (this.isEventRegistrer) {
-            this.cleanEvents()
-            this.isEventRegistrer = false
-        }
+        this.removeWindowEvents()
     };
 
 }

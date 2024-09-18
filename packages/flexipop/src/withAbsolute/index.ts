@@ -1,1 +1,1 @@
-export { default as CreatePopperWithAbsolute } from "./popperWithAbsolute"
+export { default as UseCreatePopperAbsolute, fCreatePopperAbsolute } from "./popperWithAbsolute"
