@@ -1,8 +1,45 @@
 {
   "name": "flexipop",
-  "private": true,
+  "private": false,
   "version": "0.0.0",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/flexipop.js",
+  "module": "./dist/flexipop.cjs.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/flexipop.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/flexipop.cjs.js"
+      }
+    },
+    "./flexipop.css": "./dist/flexipop.css",
+    "./with-absolute": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/flexipopWithAbsolute.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/flexipopWithAbsolute.cjs.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json",
+    "!vite.config.ts",
+    "!.gitignore",
+    "!tsconfig.json"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -10,6 +47,28 @@
   },
   "devDependencies": {
     "typescript": "^5.5.3",
-    "vite": "^5.4.1"
-  }
+    "vite": "^5.4.1",
+    "vite-plugin-dts": "^4.2.1"
+  },
+  "keywords": [
+    "flexipop",
+    "flexilla popper",
+    "popper",
+    "dropdown",
+    "positioning engine",
+    "popover",
+    "tooltip",
+    "flexilla",
+    "positioning"
+  ],
+  "homepage": "https://github.com/unify-ui-dev/flexipop",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unify-ui-dev/flexipop/tree/main/packages/flexipop"
+  },
+  "bugs": {
+    "url": "https://github.com/unify-ui-dev/flexipop/issues"
+  },
+  "license": "MIT",
+  "author": "johnkat-mj"
 }

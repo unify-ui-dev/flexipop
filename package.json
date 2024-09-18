@@ -4,8 +4,11 @@
   "workspaces": [
     "packages/*"
   ],
-  "dependencies": {},
+  "scripts": {
+    "build": "npx lerna run build"
+  },
   "devDependencies": {
+    "@types/node": "^22.5.5",
     "lerna": "^8.0.2"
   }
 }
