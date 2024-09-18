@@ -11,6 +11,8 @@ class CreatePopper {
     private disableOnResize: boolean
     private disableOnScroll: boolean
     private onUpdate: (({ x, y, placement }: { x: number, y: number, placement: Placement }) => void) | undefined
+    private isEventRegistrer: boolean
+
     /**
      * Flexilla Popper 
      * @param reference 
@@ -29,6 +31,7 @@ class CreatePopper {
         if (options.offsetDistance && typeof options.offsetDistance !== "number") throw new Error("OffsetDistance must be a number");
 
         const { disableOnResize, disableOnScroll } = eventEffect
+        this.isEventRegistrer = false
         this.reference = reference
         this.popper = popper
         this.offsetDistance = offsetDistance
@@ -95,6 +98,7 @@ class CreatePopper {
         }
         if (!this.disableOnScroll)
             window.addEventListener("scroll", this.initPositionate)
+        this.isEventRegistrer = true
     }
 
     private initPositionate = (): void => {
@@ -112,7 +116,13 @@ class CreatePopper {
 
     setOptions({ placement, offsetDistance }: { placement: Placement, offsetDistance?: number }) {
         this.initPlacement(placement, offsetDistance)
+        if (this.isEventRegistrer) this.cleanEvents()
         this.attachWindowEvent()
+    }
+
+    private cleanEvents = () => {
+        !this.disableOnResize && window.removeEventListener("resize", this.initPositionate);
+        !this.disableOnScroll && window.removeEventListener("scroll", this.initPositionate);
     }
 
     /**
@@ -120,8 +130,10 @@ class CreatePopper {
      */
     cleanupEvents = (): void => {
         this.setInitialStyles()
-        !this.disableOnResize && window.removeEventListener("resize", this.initPositionate);
-        !this.disableOnScroll && window.removeEventListener("scroll", this.initPositionate);
+        if (this.isEventRegistrer) {
+            this.cleanEvents()
+            this.isEventRegistrer = false
+        }
     };
 
 }
